@@ -562,7 +562,7 @@ function collectValues() {
     'Age':               document.getElementById('age').value,
     'Password':          '(hidden)',
     'Date of Birth':     document.getElementById('dob').value,
-    'Country':           document.getElementById('country').options[document.getElementById('country').selectedIndex].text,
+    'Country':           (() => { const s = document.getElementById('country'); return s.options[s.selectedIndex].text; })(),
     'Favourite Colour':  colour ? colour.value : '',
     'Interests':         interests.map(c => c.value).join(', '),
     'Bio':               document.getElementById('bio').value.trim(),
@@ -645,7 +645,12 @@ function fillRandom() {
   document.querySelectorAll('input[name="interests"]').forEach(c => c.checked = false);
   const boxes   = [...document.querySelectorAll('input[name="interests"]')];
   const pickN   = Math.floor(Math.random() * 3) + 1;
-  const shuffled = boxes.sort(() => Math.random() - .5).slice(0, pickN);
+  // Fisher-Yates shuffle for an unbiased random selection
+  for (let i = boxes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [boxes[i], boxes[j]] = [boxes[j], boxes[i]];
+  }
+  const shuffled = boxes.slice(0, pickN);
   shuffled.forEach(c => c.checked = true);
 }
 
