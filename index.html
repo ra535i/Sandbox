@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sandbox – Hello World</title>
+  <style>
+    /* ── Reset & base ────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #f0f4ff;
+      --surface:  #ffffff;
+      --primary:  #4f46e5;
+      --primary-h:#4338ca;
+      --accent:   #7c3aed;
+      --text:     #1e1b4b;
+      --muted:    #6b7280;
+      --error:    #dc2626;
+      --success:  #16a34a;
+      --radius:   12px;
+      --shadow:   0 4px 24px rgba(79,70,229,.12);
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      /* fade-in animation on page load */
+      animation: fadeIn .6s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Layout ──────────────────────────────────────────────────────── */
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 1.25rem;
+    }
+
+    /* ── Hero ────────────────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      color: #fff;
+      padding: 3.5rem 1.25rem 2.5rem;
+      text-align: center;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: .5rem;
+    }
+
+    header p { font-size: 1.1rem; opacity: .9; }
+
+    #datetime {
+      display: inline-block;
+      margin-top: 1rem;
+      background: rgba(255,255,255,.15);
+      backdrop-filter: blur(6px);
+      padding: .4rem 1.2rem;
+      border-radius: 999px;
+      font-size: .9rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Card ────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+
+    .card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+    }
+
+    /* ── Form fields ─────────────────────────────────────────────────── */
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: .35rem;
+      font-size: .9rem;
+    }
+
+    input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),
+    select,
+    textarea {
+      width: 100%;
+      padding: .6rem .9rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: .95rem;
+      transition: border-color .2s, box-shadow .2s;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.15);
+    }
+
+    textarea { resize: vertical; min-height: 90px; }
+
+    /* password wrapper */
+    .pw-wrap { position: relative; }
+    .pw-wrap input { padding-right: 4rem; }
+    .pw-toggle {
+      position: absolute;
+      right: .6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 600;
+    }
+
+    /* radio / checkbox groups */
+    .radio-group, .check-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem 1.5rem;
+      margin-top: .25rem;
+    }
+
+    .radio-group label, .check-group label {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-weight: 400;
+      cursor: pointer;
+    }
+
+    /* range */
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .range-wrap input[type=range] { flex: 1; accent-color: var(--primary); }
+    #rangeVal {
+      min-width: 2.5rem;
+      text-align: center;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    /* file input */
+    input[type=file] {
+      padding: .4rem;
+      border: 1.5px dashed #d1d5db;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+
+    /* error messages */
+    .err {
+      color: var(--error);
+      font-size: .82rem;
+      margin-top: .25rem;
+      display: none;
+    }
+    .err.visible { display: block; }
+
+    /* invalid field highlight */
+    .invalid {
+      border-color: var(--error) !important;
+      box-shadow: 0 0 0 3px rgba(220,38,38,.1) !important;
+    }
+
+    /* ── Buttons ─────────────────────────────────────────────────────── */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-top: 1.75rem;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: .6rem 1.4rem;
+      font-size: .95rem;
+      font-weight: 600;
+      transition: background .2s, transform .1s;
+    }
+
+    button:active { transform: scale(.97); }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-h); }
+
+    .btn-secondary { background: #e5e7eb; color: var(--text); }
+    .btn-secondary:hover { background: #d1d5db; }
+
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { background: #6d28d9; }
+
+    /* ── Submission counter ──────────────────────────────────────────── */
+    #submitCount {
+      text-align: right;
+      font-size: .82rem;
+      color: var(--muted);
+      margin-top: .5rem;
+    }
+
+    /* ── Success / error banners ─────────────────────────────────────── */
+    #successBox {
+      background: #dcfce7;
+      border: 1.5px solid #86efac;
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      color: var(--success);
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    #successBox h3 { margin-bottom: .75rem; }
+    #successBox pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: .85rem;
+      background: rgba(255,255,255,.6);
+      padding: .75rem;
+      border-radius: 8px;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: .82rem;
+      padding: 2rem 1rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ──────────────────────────────────────────────────────────── -->
+<header>
+  <div class="container">
+    <h1>Hello, World! 👋</h1>
+    <p>Welcome to the Sandbox — a self-contained static playground for testing.</p>
+    <span id="datetime"></span>
+  </div>
+</header>
+
+<!-- ── Interactive Form ───────────────────────────────────────────────── -->
+<main class="container">
+  <div class="card">
+    <h2>Interactive Form Tester</h2>
+
+    <form id="demoForm" novalidate>
+
+      <!-- Text: first name -->
+      <div class="field">
+        <label for="firstName">First Name <span style="color:var(--error)">*</span></label>
+        <input type="text" id="firstName" name="firstName" placeholder="Jane" />
+        <span class="err" id="firstNameErr">First name is required.</span>
+      </div>
+
+      <!-- Email -->
+      <div class="field">
+        <label for="email">Email Address <span style="color:var(--error)">*</span></label>
+        <input type="email" id="email" name="email" placeholder="jane@example.com" />
+        <span class="err" id="emailErr">Please enter a valid email address.</span>
+      </div>
+
+      <!-- Number with min/max -->
+      <div class="field">
+        <label for="age">Age (1–120) <span style="color:var(--error)">*</span></label>
+        <input type="number" id="age" name="age" min="1" max="120" placeholder="25" />
+        <span class="err" id="ageErr">Please enter a number between 1 and 120.</span>
+      </div>
+
+      <!-- Password with show/hide -->
+      <div class="field">
+        <label for="password">Password <span style="color:var(--error)">*</span></label>
+        <div class="pw-wrap">
+          <input type="password" id="password" name="password" placeholder="••••••••" />
+          <button type="button" class="pw-toggle" id="pwToggle" aria-label="Toggle password visibility">Show</button>
+        </div>
+        <span class="err" id="passwordErr">Password is required.</span>
+      </div>
+
+      <!-- Date picker -->
+      <div class="field">
+        <label for="dob">Date of Birth <span style="color:var(--error)">*</span></label>
+        <input type="date" id="dob" name="dob" />
+        <span class="err" id="dobErr">Please select a date.</span>
+      </div>
+
+      <!-- Dropdown select -->
+      <div class="field">
+        <label for="country">Country <span style="color:var(--error)">*</span></label>
+        <select id="country" name="country">
+          <option value="">— Select a country —</option>
+          <option value="us">United States</option>
+          <option value="gb">United Kingdom</option>
+          <option value="ca">Canada</option>
+          <option value="au">Australia</option>
+          <option value="de">Germany</option>
+        </select>
+        <span class="err" id="countryErr">Please select a country.</span>
+      </div>
+
+      <!-- Radio group -->
+      <div class="field">
+        <label>Favourite Colour <span style="color:var(--error)">*</span></label>
+        <div class="radio-group" id="colourGroup">
+          <label><input type="radio" name="colour" value="red" />   Red</label>
+          <label><input type="radio" name="colour" value="green" /> Green</label>
+          <label><input type="radio" name="colour" value="blue" />  Blue</label>
+          <label><input type="radio" name="colour" value="other" /> Other</label>
+        </div>
+        <span class="err" id="colourErr">Please choose a colour.</span>
+      </div>
+
+      <!-- Checkbox group -->
+      <div class="field">
+        <label>Interests (select all that apply) <span style="color:var(--error)">*</span></label>
+        <div class="check-group" id="interestGroup">
+          <label><input type="checkbox" name="interests" value="coding" />   Coding</label>
+          <label><input type="checkbox" name="interests" value="design" />   Design</label>
+          <label><input type="checkbox" name="interests" value="music" />    Music</label>
+          <label><input type="checkbox" name="interests" value="gaming" />   Gaming</label>
+        </div>
+        <span class="err" id="interestErr">Please select at least one interest.</span>
+      </div>
+
+      <!-- Textarea -->
+      <div class="field">
+        <label for="bio">Short Bio <span style="color:var(--error)">*</span></label>
+        <textarea id="bio" name="bio" placeholder="Tell us a little about yourself…"></textarea>
+        <span class="err" id="bioErr">Bio is required.</span>
+      </div>
+
+      <!-- Range slider -->
+      <div class="field">
+        <label for="satisfaction">Satisfaction Level: <span id="rangeVal">50</span></label>
+        <div class="range-wrap">
+          <input type="range" id="satisfaction" name="satisfaction" min="0" max="100" value="50" />
+        </div>
+      </div>
+
+      <!-- File upload -->
+      <div class="field">
+        <label for="avatar">Profile Picture (image)</label>
+        <input type="file" id="avatar" name="avatar" accept="image/*" />
+        <span class="err" id="avatarErr"></span>
+      </div>
+
+      <!-- Buttons -->
+      <div class="btn-row">
+        <button type="submit"  class="btn-primary">Submit</button>
+        <button type="button"  class="btn-accent"  id="randomBtn">🎲 Fill with random data</button>
+        <button type="button"  class="btn-secondary" id="clearBtn">✕ Clear form</button>
+      </div>
+
+    </form><!-- /demoForm -->
+
+    <!-- Success output -->
+    <div id="successBox">
+      <h3>✅ Submitted successfully!</h3>
+      <pre id="successContent"></pre>
+    </div>
+
+    <!-- Submission counter -->
+    <p id="submitCount">Submissions: 0</p>
+
+  </div><!-- /card -->
+</main>
+
+<footer>
+  <p>Sandbox static site · No frameworks, no build tools · Works offline</p>
+</footer>
+
+<script>
+/* =========================================================
+   Utility helpers
+   ========================================================= */
+
+/** Format a Date object as a readable local string and tick every second. */
+function startClock() {
+  const el = document.getElementById('datetime');
+  function tick() {
+    el.textContent = new Date().toLocaleString(undefined, {
+      weekday: 'short', year: 'numeric', month: 'short',
+      day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+/* =========================================================
+   Submission counter (persisted via localStorage)
+   ========================================================= */
+
+const COUNT_KEY = 'sandbox_submit_count';
+
+function getCount()  { return parseInt(localStorage.getItem(COUNT_KEY) || '0', 10); }
+function incCount()  { const n = getCount() + 1; localStorage.setItem(COUNT_KEY, n); return n; }
+function renderCount() {
+  document.getElementById('submitCount').textContent = `Submissions: ${getCount()}`;
+}
+
+/* =========================================================
+   Password show/hide toggle
+   ========================================================= */
+
+function initPasswordToggle() {
+  const btn   = document.getElementById('pwToggle');
+  const input = document.getElementById('password');
+  btn.addEventListener('click', () => {
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.textContent = show ? 'Hide' : 'Show';
+  });
+}
+
+/* =========================================================
+   Range slider live display
+   ========================================================= */
+
+function initRangeSlider() {
+  const slider  = document.getElementById('satisfaction');
+  const display = document.getElementById('rangeVal');
+  slider.addEventListener('input', () => { display.textContent = slider.value; });
+}
+
+/* =========================================================
+   Validation helpers
+   ========================================================= */
+
+/** Mark a field as valid — removes inline error. */
+function clearError(fieldId, errId) {
+  const f = document.getElementById(fieldId);
+  const e = document.getElementById(errId);
+  if (f) f.classList.remove('invalid');
+  if (e) e.classList.remove('visible');
+}
+
+/** Mark a field as invalid — shows inline error. */
+function showError(fieldId, errId, msg) {
+  const f = document.getElementById(fieldId);
+  const e = document.getElementById(errId);
+  if (f) f.classList.add('invalid');
+  if (e) { if (msg) e.textContent = msg; e.classList.add('visible'); }
+}
+
+/** Simple email regex check. */
+function isValidEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+}
+
+/* =========================================================
+   Full form validation
+   Returns true if all fields are valid.
+   ========================================================= */
+
+function validateForm() {
+  let ok = true;
+
+  // --- First name ---
+  const fn = document.getElementById('firstName').value.trim();
+  if (!fn) { showError('firstName','firstNameErr'); ok = false; }
+  else       clearError('firstName','firstNameErr');
+
+  // --- Email ---
+  const em = document.getElementById('email').value.trim();
+  if (!isValidEmail(em)) { showError('email','emailErr'); ok = false; }
+  else                     clearError('email','emailErr');
+
+  // --- Age ---
+  const ageEl  = document.getElementById('age');
+  const ageVal = parseInt(ageEl.value, 10);
+  if (isNaN(ageVal) || ageVal < 1 || ageVal > 120) { showError('age','ageErr'); ok = false; }
+  else                                               clearError('age','ageErr');
+
+  // --- Password ---
+  const pw = document.getElementById('password').value;
+  if (!pw) { showError('password','passwordErr'); ok = false; }
+  else       clearError('password','passwordErr');
+
+  // --- Date ---
+  const dob = document.getElementById('dob').value;
+  if (!dob) { showError('dob','dobErr'); ok = false; }
+  else        clearError('dob','dobErr');
+
+  // --- Country select ---
+  const country = document.getElementById('country').value;
+  if (!country) { showError('country','countryErr'); ok = false; }
+  else            clearError('country','countryErr');
+
+  // --- Radio group ---
+  const colour = document.querySelector('input[name="colour"]:checked');
+  const colourErrEl = document.getElementById('colourErr');
+  if (!colour) {
+    colourErrEl.classList.add('visible');
+    ok = false;
+  } else {
+    colourErrEl.classList.remove('visible');
+  }
+
+  // --- Checkbox group ---
+  const interests = [...document.querySelectorAll('input[name="interests"]:checked')];
+  const intErrEl  = document.getElementById('interestErr');
+  if (!interests.length) {
+    intErrEl.classList.add('visible');
+    ok = false;
+  } else {
+    intErrEl.classList.remove('visible');
+  }
+
+  // --- Textarea ---
+  const bio = document.getElementById('bio').value.trim();
+  if (!bio) { showError('bio','bioErr'); ok = false; }
+  else        clearError('bio','bioErr');
+
+  return ok;
+}
+
+/* =========================================================
+   Collect form values for the success summary
+   ========================================================= */
+
+function collectValues() {
+  const colour    = document.querySelector('input[name="colour"]:checked');
+  const interests = [...document.querySelectorAll('input[name="interests"]:checked')];
+  const avatar    = document.getElementById('avatar');
+  const fileName  = avatar.files.length ? avatar.files[0].name : '(none)';
+
+  return {
+    'First Name':        document.getElementById('firstName').value.trim(),
+    'Email':             document.getElementById('email').value.trim(),
+    'Age':               document.getElementById('age').value,
+    'Password':          '(hidden)',
+    'Date of Birth':     document.getElementById('dob').value,
+    'Country':           (() => { const s = document.getElementById('country'); return s.options[s.selectedIndex].text; })(),
+    'Favourite Colour':  colour ? colour.value : '',
+    'Interests':         interests.map(c => c.value).join(', '),
+    'Bio':               document.getElementById('bio').value.trim(),
+    'Satisfaction':      document.getElementById('satisfaction').value,
+    'Profile Picture':   fileName
+  };
+}
+
+/* =========================================================
+   Form submit handler
+   ========================================================= */
+
+function initFormSubmit() {
+  document.getElementById('demoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Hide previous success box
+    document.getElementById('successBox').style.display = 'none';
+
+    if (!validateForm()) return;
+
+    // Increment + display counter
+    const newCount = incCount();
+    document.getElementById('submitCount').textContent = `Submissions: ${newCount}`;
+
+    // Show success summary
+    const values = collectValues();
+    const lines  = Object.entries(values).map(([k,v]) => `  ${k}: ${v}`).join('\n');
+    document.getElementById('successContent').textContent = lines;
+    const box = document.getElementById('successBox');
+    box.style.display = 'block';
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
+/* =========================================================
+   Random data filler
+   ========================================================= */
+
+function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function randomDate(start, end) {
+  const d = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+  return d.toISOString().slice(0, 10);
+}
+
+function fillRandom() {
+  const firstNames = ['Alice','Bob','Carol','Dave','Eve','Frank','Grace','Hank'];
+  const domains    = ['example.com','test.org','sample.net','demo.io'];
+  const colours    = ['red','green','blue','other'];
+  const countries  = ['us','gb','ca','au','de'];
+  const bios       = [
+    'I love building things on the web.',
+    'Coffee-powered developer by day, gamer by night.',
+    'Passionate about open-source and good design.',
+    'Cat person, JavaScript enthusiast, lifelong learner.'
+  ];
+
+  const name = randomFrom(firstNames);
+
+  document.getElementById('firstName').value  = name;
+  document.getElementById('email').value      = `${name.toLowerCase()}@${randomFrom(domains)}`;
+  document.getElementById('age').value        = Math.floor(Math.random() * 80) + 18;
+  document.getElementById('password').value   = Math.random().toString(36).slice(-10);
+  document.getElementById('dob').value        = randomDate(new Date(1950,0,1), new Date(2005,0,1));
+  document.getElementById('country').value    = randomFrom(countries);
+  document.getElementById('bio').value        = randomFrom(bios);
+
+  const satisfaction = Math.floor(Math.random() * 101);
+  document.getElementById('satisfaction').value = satisfaction;
+  document.getElementById('rangeVal').textContent = satisfaction;
+
+  // Radio
+  document.querySelectorAll('input[name="colour"]').forEach(r => r.checked = false);
+  const chosenColour = randomFrom(colours);
+  const radioEl = document.querySelector(`input[name="colour"][value="${chosenColour}"]`);
+  if (radioEl) radioEl.checked = true;
+
+  // Checkboxes — pick 1-3 at random
+  document.querySelectorAll('input[name="interests"]').forEach(c => c.checked = false);
+  const boxes   = [...document.querySelectorAll('input[name="interests"]')];
+  const pickN   = Math.floor(Math.random() * 3) + 1;
+  // Fisher-Yates shuffle for an unbiased random selection
+  for (let i = boxes.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [boxes[i], boxes[j]] = [boxes[j], boxes[i]];
+  }
+  const shuffled = boxes.slice(0, pickN);
+  shuffled.forEach(c => c.checked = true);
+}
+
+/* =========================================================
+   Clear form
+   ========================================================= */
+
+function clearForm() {
+  document.getElementById('demoForm').reset();
+  document.getElementById('rangeVal').textContent = '50';
+
+  // Remove all error styling
+  document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+  document.querySelectorAll('.err').forEach(el => el.classList.remove('visible'));
+
+  // Hide success box
+  document.getElementById('successBox').style.display = 'none';
+
+  // Reset password field type
+  document.getElementById('password').type = 'password';
+  document.getElementById('pwToggle').textContent = 'Show';
+}
+
+/* =========================================================
+   Bootstrap
+   ========================================================= */
+
+document.addEventListener('DOMContentLoaded', function() {
+  startClock();
+  renderCount();
+  initPasswordToggle();
+  initRangeSlider();
+  initFormSubmit();
+
+  document.getElementById('randomBtn').addEventListener('click', fillRandom);
+  document.getElementById('clearBtn').addEventListener('click', clearForm);
+});
+</script>
+</body>
+</html>
