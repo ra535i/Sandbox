@@ -1,0 +1,3 @@
+replicaCount: 1
+appName: stage.sandbox.com
+environment: stage

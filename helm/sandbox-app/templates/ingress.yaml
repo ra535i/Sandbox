@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.appName }}-ingress
+  labels:
+    app: sandbox-app
+    appName: {{ .Values.appName }}
+    environment: {{ .Values.environment }}
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ .Values.appName }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.appName }}-service
+            port:
+              number: {{ .Values.service.port }}

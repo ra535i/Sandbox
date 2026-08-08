@@ -1,0 +1,22 @@
+replicaCount: 1
+appName: sandbox-app
+
+image:
+  repository: sandbox-app
+  tag: latest
+  pullPolicy: Never
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 80
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "100m"
+  limits:
+    memory: "128Mi"
+    cpu: "200m"
+
+environment: dev

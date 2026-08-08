@@ -1,0 +1,3 @@
+replicaCount: 1
+appName: dev.sandbox.com
+environment: dev
