@@ -13,7 +13,7 @@ kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.
 Write-Host "`n[2/4] Installing ArgoCD..." -ForegroundColor Yellow
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-kubectl patch svc argocd-server -n argocd --type=merge -p '{\"spec\": {\"type\": \"LoadBalancer\"}}'
+# Keep ArgoCD as ClusterIP — all traffic routes through nginx ingress by hostname
 kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 
 # Create ArgoCD ingress
@@ -56,8 +56,8 @@ docker tag sandbox-app:latest localhost:5000/sandbox-app:latest
 docker push localhost:5000/sandbox-app:latest
 
 # ── 4. Update hosts file ──────────────────────────────────────────────────────
-# Docker Desktop's com.docker.backend handles LoadBalancer port 80 routing natively.
-# All hostnames just need to resolve to 127.0.0.1.
+# Docker Desktop routes LoadBalancer services on port 80 via localhost natively.
+# All hostnames resolve to 127.0.0.1.
 Write-Host "`n[4/4] Updating hosts file..." -ForegroundColor Yellow
 $hostsFile = "C:\Windows\System32\drivers\etc\hosts"
 $hostnames = @("dev.sethsandbox.com", "qa.sethsandbox.com", "uat.sethsandbox.com", "stage.sethsandbox.com", "sethsandbox.com", "argocd-local.com")
