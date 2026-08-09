@@ -1,3 +1,4 @@
 replicaCount: 1
-appName: uat.sandbox.com
+appName: uat-sandbox
+hostname: uat.sandbox.com
 environment: uat

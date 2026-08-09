@@ -1,5 +1,6 @@
 replicaCount: 1
 appName: sandbox-app
+hostname: sandbox.com
 
 image:
   repository: sandbox-app

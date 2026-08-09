@@ -1,3 +1,4 @@
 replicaCount: 1
-appName: dev.sandbox.com
+appName: dev-sandbox
+hostname: dev.sandbox.com
 environment: dev
