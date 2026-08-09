@@ -4,5 +4,5 @@ hostname: dev.sethsandbox.com
 environment: dev
 image:
   repository: ghcr.io/ra535i/sandbox-app
-  tag: "c1ffc84b9059dc63fff437033a15722b3044ced5"
+  tag: "276de625c76d642b317b59ba387699657ed01f5e"
   pullPolicy: Always
