@@ -1,4 +1,4 @@
 replicaCount: 1
 appName: stage-sandbox
-hostname: stage.sandbox.com
+hostname: stage.sethsandbox.com
 environment: stage

@@ -1,4 +1,4 @@
 replicaCount: 1
 appName: qa-sandbox
-hostname: qa.sandbox.com
+hostname: qa.sethsandbox.com
 environment: qa

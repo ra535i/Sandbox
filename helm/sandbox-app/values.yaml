@@ -1,6 +1,6 @@
 replicaCount: 1
 appName: sandbox-app
-hostname: sandbox.com
+hostname: sethsandbox.com
 
 image:
   repository: localhost:5000/sandbox-app

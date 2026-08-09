@@ -1,4 +1,4 @@
 replicaCount: 2
 appName: prod-sandbox
-hostname: sandbox.com
+hostname: sethsandbox.com
 environment: production
