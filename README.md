@@ -30,6 +30,22 @@ docker stop sandbox-test && docker rm sandbox-test
 
 ---
 
+## CI/CD Pipeline
+
+Every push to `main` triggers a GitHub Actions workflow that:
+
+1. Builds the Docker image
+2. Pushes it to **GitHub Container Registry (GHCR)** tagged with the commit SHA
+3. Updates `values-dev.yaml` with the new image tag
+4. Commits back to `main`
+5. **ArgoCD auto-syncs** and deploys to the dev environment
+
+The image is published at `ghcr.io/ra535i/sandbox-app:<sha>` and is publicly accessible — no credentials needed to pull.
+
+Watch workflow runs at: `https://github.com/ra535i/Sandbox/actions`
+
+---
+
 ## Kubernetes Deployment (Docker Desktop)
 
 The application is deployed to a local Kubernetes cluster via **ArgoCD** and **Helm**, with environments for dev, qa, uat, stage, and production.
@@ -74,19 +90,24 @@ This script will:
 2. Create an Application pointing to this repository
    - **Path:** `helm/sandbox-app`
    - **Values file:** `values-dev.yaml` (or qa/uat/stage/prod)
-3. Click **Sync**
+3. Enable **Auto-Sync** on the dev application (App Details → Sync Policy → Automated)
+4. Click **Sync** for the initial deployment
+
+After the initial setup, dev deploys automatically on every push to `main`. All other environments are promoted manually by updating the image tag in their respective values file.
+
+### Promoting to QA / UAT / Stage / Prod
+
+Update the `tag:` field in the target environment's values file with a SHA from a successful dev build, commit, and push. ArgoCD will detect the change and sync.
 
 ### Building and pushing the Docker image
 
-The cluster uses a local registry (`localhost:5000`). After code changes:
+The dev environment image is built and pushed automatically by GitHub Actions on every push to `main`. Manual builds are only needed for non-dev environments or local testing:
 
 ```powershell
 docker build -t sandbox-app:latest .
 docker tag sandbox-app:latest localhost:5000/sandbox-app:latest
 docker push localhost:5000/sandbox-app:latest
 ```
-
-Then trigger a sync in ArgoCD.
 
 ### Project structure
 
@@ -95,6 +116,9 @@ Sandbox/
 ├── Dockerfile                        # Ubuntu + nginx image
 ├── index.html                        # Application
 ├── setup-cluster.ps1                 # One-command cluster setup
+├── .github/
+│   └── workflows/
+│       └── ci-dev.yml                # CI/CD pipeline for dev
 └── helm/
     └── sandbox-app/
         ├── Chart.yaml
@@ -119,6 +143,7 @@ Sandbox/
 | `index.html` | Single-file app — all HTML, CSS, and JS in one place |
 | `Dockerfile` | Builds a production nginx image on Ubuntu |
 | `setup-cluster.ps1` | Bootstraps the full local Kubernetes infrastructure |
+| `.github/workflows/ci-dev.yml` | GitHub Actions CI/CD pipeline for dev |
 | `helm/` | Helm chart for multi-environment Kubernetes deployment |
 | `README.md` | This file |
 
