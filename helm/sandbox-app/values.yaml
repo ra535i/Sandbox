@@ -3,9 +3,9 @@ appName: sandbox-app
 hostname: sandbox.com
 
 image:
-  repository: sandbox-app
+  repository: localhost:5000/sandbox-app
   tag: latest
-  pullPolicy: Never
+  pullPolicy: IfNotPresent
 
 service:
   type: LoadBalancer
