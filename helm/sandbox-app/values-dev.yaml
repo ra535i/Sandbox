@@ -2,3 +2,7 @@ replicaCount: 1
 appName: dev-sandbox
 hostname: dev.sethsandbox.com
 environment: dev
+image:
+  repository: ghcr.io/ra535i/sandbox-app
+  tag: latest
+  pullPolicy: Always
