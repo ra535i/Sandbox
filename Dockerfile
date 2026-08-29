@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM --platform=linux/amd64 ubuntu:latest
 
 # Install nginx and clean up package manager cache
 RUN apt-get update && \

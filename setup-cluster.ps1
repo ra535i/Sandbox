@@ -8,6 +8,8 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 
 Write-Host "Setting up cluster infrastructure..." -ForegroundColor Cyan
+$repoRoot = $PSScriptRoot
+$reconcileScript = Join-Path $repoRoot "scripts\reconcile-ingress-routing.ps1"
 
 # ── 1. Nginx Ingress Controller ───────────────────────────────────────────────
 Write-Host "`n[1/4] Installing Nginx Ingress Controller..." -ForegroundColor Yellow
@@ -60,36 +62,24 @@ docker build -t sandbox-app:latest .
 docker tag sandbox-app:latest localhost:5000/sandbox-app:latest
 docker push localhost:5000/sandbox-app:latest
 
-# -- 4. Update hosts file ----------------------------------------------------
-# Docker Desktop routes LoadBalancer services on port 80 via localhost natively.
-# All hostnames resolve to 127.0.0.1.
-Write-Host "`n[4/5] Updating hosts file and registering port-forward task..." -ForegroundColor Yellow
-$hostsFile = "C:\Windows\System32\drivers\etc\hosts"
-$hostnames = @("dev.sethsandbox.com", "qa.sethsandbox.com", "uat.sethsandbox.com", "stage.sethsandbox.com", "sethsandbox.com", "argocd-local.com")
-$hostsContent = Get-Content $hostsFile
+# -- 4. Reconcile hosts + portproxy ------------------------------------------
+Write-Host "`n[4/5] Reconciling hosts and port forwarding..." -ForegroundColor Yellow
+if (-not (Test-Path $reconcileScript)) {
+  throw "Missing helper script: $reconcileScript"
+}
 
-$hostsContent = $hostsContent | Where-Object { $_ -notmatch "sethsandbox\.com|argocd-local\.com" }
-$hostsContent += ""
-# Use the ingress controller's external IP assigned by Docker Desktop
-$ingressIP = kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath="{.status.loadBalancer.ingress[0].ip}"
-if (-not $ingressIP) { $ingressIP = "127.0.0.1" }
-Write-Host "Using ingress IP: $ingressIP" -ForegroundColor Cyan
-$hostnames | ForEach-Object { $hostsContent += "$ingressIP  $_" }
-Set-Content $hostsFile $hostsContent
-Write-Host "Hosts file updated." -ForegroundColor Green
+powershell -ExecutionPolicy Bypass -File $reconcileScript
 
-# -- 5. netsh portproxy (Windows port 80/443 -> K8s ingress NodePorts) --------
-Write-Host "`n[5/5] Configuring port forwarding..." -ForegroundColor Yellow
-$nodeIP    = kubectl get nodes -o jsonpath="{.items[0].status.addresses[?(@.type=='InternalIP')].address}"
-$httpPort  = kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath="{.spec.ports[?(@.name=='http')].nodePort}"
-$httpsPort = kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath="{.spec.ports[?(@.name=='https')].nodePort}"
+# -- 5. Register auto-heal task ----------------------------------------------
+Write-Host "`n[5/5] Registering auto-heal scheduled task..." -ForegroundColor Yellow
+$taskName = "Sandbox-Ingress-Reconcile"
+$taskAction = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File `"$reconcileScript`""
+$taskTrigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+$taskPrincipal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
+$taskSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable
 
-# Remove existing rules before adding new ones
-netsh interface portproxy delete v4tov4 listenport=80  listenaddress=0.0.0.0 2>$null
-netsh interface portproxy delete v4tov4 listenport=443 listenaddress=0.0.0.0 2>$null
-netsh interface portproxy add v4tov4 listenport=80  listenaddress=0.0.0.0 connectport=$httpPort  connectaddress=$nodeIP
-netsh interface portproxy add v4tov4 listenport=443 listenaddress=0.0.0.0 connectport=$httpsPort connectaddress=$nodeIP
-Write-Host "Port forwarding configured: 80 -> $nodeIP`:$httpPort, 443 -> $nodeIP`:$httpsPort" -ForegroundColor Green
+Register-ScheduledTask -TaskName $taskName -Action $taskAction -Trigger $taskTrigger -Principal $taskPrincipal -Settings $taskSettings -Force | Out-Null
+Write-Host "Scheduled task '$taskName' registered for user logon." -ForegroundColor Green
 
 # Run ArgoCD in insecure (HTTP) mode to prevent redirect loops
 kubectl patch configmap argocd-cmd-params-cm -n argocd --type merge -p '{\"data\":{\"server.insecure\":\"true\"}}'

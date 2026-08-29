@@ -79,10 +79,20 @@ This script will:
 1. Install the **Nginx Ingress Controller**
 2. Install **ArgoCD** (ClusterIP, routed via ingress)
 3. Start a **local Docker registry** at `localhost:5000` and push the app image
-4. Update the Windows **hosts file** with all environment domains
-5. Configure **netsh portproxy** to forward Windows ports 80/443 to the cluster ingress NodePorts
+4. Map all sandbox hostnames to `127.0.0.1` and reconcile forwarding strategy
+5. Prefer **netsh portproxy** when node NodePorts are reachable, otherwise auto-fallback to a **kubectl port-forward** task
+6. Register an auto-heal Scheduled Task (`Sandbox-Ingress-Reconcile`) that re-runs reconciliation at user logon
 
 > The script self-elevates to Administrator via UAC if not already elevated.
+
+If Docker Desktop or Kubernetes restarts and local URLs stop resolving, run:
+
+```powershell
+.\scripts\reconcile-ingress-routing.ps1
+```
+
+The script now runs an endpoint probe for `http://argocd-local.com` and `http://dev.sethsandbox.com` and prints `PASS`/`FAIL` with HTTP status.
+If either probe fails, the script exits with code `1`.
 
 ### Deploying via ArgoCD
 
